@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Mid-Sem Revision · Self-Study App</title>
+<style>
+  :root{
+    --bg:#0f1221; --panel:#171a2e; --card:#1e2238; --ink:#e9ecf5; --muted:#a3a9c2;
+    --line:#2c3150; --accent:#6c8cff; --accent2:#8b5cf6;
+    --solved:#1f8b5f; --solved-bg:#10241c; --solved-line:#1f7a55;
+    --check:#d99a2b; --check-bg:#2a2110; --check-line:#a87a20;
+    --formula-bg:#12152a; --code:#ffd479;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px}
+  a{color:var(--accent);text-decoration:none}
+
+  /* Layout */
+  .layout{display:flex;min-height:100vh}
+  .sidebar{width:290px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);
+    position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px}
+  .content{flex:1;max-width:920px;margin:0 auto;padding:34px 30px 120px}
+  @media(max-width:880px){
+    .layout{flex-direction:column}
+    .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line)}
+    .content{padding:24px 16px 90px}
+  }
+
+  /* Sidebar */
+  .brand{font-size:1.18rem;font-weight:700;letter-spacing:.2px;margin-bottom:2px}
+  .brand small{display:block;font-size:.72rem;color:var(--muted);font-weight:500;margin-top:4px;line-height:1.4}
+  .navlist{list-style:none;padding:0;margin:18px 0 0}
+  .navlist li{margin:2px 0}
+  .navlist a{display:flex;gap:9px;align-items:flex-start;padding:8px 10px;border-radius:8px;color:var(--muted);
+    font-size:.86rem;transition:.15s;border:1px solid transparent}
+  .navlist a:hover{background:var(--card);color:var(--ink)}
+  .navlist a.active{background:linear-gradient(90deg,rgba(108,140,255,.18),transparent);
+    color:#fff;border-color:var(--line);font-weight:600}
+  .navnum{display:inline-flex;width:22px;height:22px;flex-shrink:0;align-items:center;justify-content:center;
+    background:var(--card);border:1px solid var(--line);border-radius:6px;font-size:.72rem;color:var(--accent)}
+
+  /* Header */
+  .hero{background:linear-gradient(135deg,#1b1f3a 0%,#241a3d 100%);
+    border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin-bottom:26px}
+  .hero h1{margin:0 0 6px;font-size:1.7rem}
+  .hero p{margin:6px 0;color:var(--muted)}
+  .pill{display:inline-block;background:rgba(108,140,255,.16);color:#bcd0ff;border:1px solid var(--line);
+    padding:3px 10px;border-radius:999px;font-size:.74rem;margin:3px 6px 3px 0}
+
+  /* Exam blueprint table */
+  .blueprint{width:100%;border-collapse:collapse;margin:14px 0 4px;font-size:.86rem}
+  .blueprint th,.blueprint td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  .blueprint th{background:var(--card);color:#cdd4f0}
+  .blueprint td:last-child{color:var(--accent);font-weight:600;white-space:nowrap}
+
+  /* Sections */
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:24px 26px;margin-bottom:24px;scroll-margin-top:16px}
+  section h2{margin:0 0 4px;font-size:1.35rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .tag{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.3px}
+  .tag.math{background:#16263b;color:#7fc6ff;border:1px solid #285a86}
+  .tag.app{background:#241a3d;color:#c9aaff;border:1px solid #553a86}
+  .tag.marks{background:#10241c;color:#7fe0a8;border:1px solid #1f7a55}
+  h3{margin:22px 0 8px;font-size:1.05rem;color:#e7ddff}
+  h4{margin:16px 0 6px;font-size:.95rem;color:#cdd4f0}
+  p{margin:9px 0}
+  ul.clean{margin:8px 0;padding-left:20px}
+  ul.clean li{margin:5px 0}
+  .muted{color:var(--muted)}
+  .why{border-left:3px solid var(--accent2);padding:6px 0 6px 14px;margin:12px 0;color:#d7d2ee}
+
+  /* Formula box */
+  .formula-box{background:var(--formula-bg);border:1px solid var(--line);border-radius:10px;
+    padding:12px 16px;margin:12px 0;overflow-x:auto}
+  .formula{font-family:'Cambria Math','Times New Roman',Georgia,serif;font-size:1.08rem;line-height:2.1;color:#f3f0ff}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 .15em}
+  .frac>span:first-child{border-bottom:1.3px solid currentColor;padding:0 .45em}
+  .frac>span:last-child{padding:1px .45em 0}
+  .vsqrt{border-top:1.3px solid currentColor;padding:0 .2em}
+  code,.kbd{font-family:'Consolas','SF Mono',Menlo,monospace;background:#0c0f1e;color:var(--code);
+    padding:1px 6px;border-radius:5px;font-size:.9em}
+
+  /* Data tables */
+  .dtable{border-collapse:collapse;margin:12px 0;font-size:.9rem}
+  .dtable th,.dtable td{border:1px solid var(--line);padding:6px 12px;text-align:center}
+  .dtable th{background:var(--card);color:#cdd4f0}
+  .dtable td.rh{background:var(--card);font-weight:600;color:#cdd4f0}
+
+  /* Example cards */
+  .ex{border-radius:12px;padding:16px 18px;margin:16px 0;border:1px solid}
+  .ex.solved{background:var(--solved-bg);border-color:var(--solved-line)}
+  .ex.check{background:var(--check-bg);border-color:var(--check-line)}
+  .ex-head{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.98rem;margin-bottom:6px}
+  .ex.solved .ex-head{color:#7fe0a8}
+  .ex.check .ex-head{color:#f0c46b}
+  .badge{font-size:.66rem;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.4px}
+  .ex.solved .badge{background:#1f7a55;color:#eafff4}
+  .ex.check .badge{background:#a87a20;color:#fff7e6}
+  .qbody{color:#eef1fb;margin:6px 0 4px}
+
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:8px 15px;font-size:.84rem;font-weight:600;
+    margin-top:10px;transition:.15s;font-family:inherit}
+  .btn.s{background:#1f7a55;color:#eafff4}
+  .btn.s:hover{background:#239665}
+  .btn.c{background:#a87a20;color:#fff7e6}
+  .btn.c:hover{background:#c9912b}
+  .sol{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed currentColor}
+  .sol.open{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .step{margin:8px 0;padding-left:14px;border-left:2px solid var(--line)}
+  .step b{color:#fff}
+  .ans{background:#0c0f1e;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-top:8px}
+  .ans .final{color:#7fe0a8;font-weight:700;font-size:1.05rem}
+  .check .ans .final{color:#f0c46b}
+
+  .tip{background:#101a2e;border:1px solid #285a86;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:.9rem}
+  .tip b{color:#7fc6ff}
+  .warn{background:#2a1414;border:1px solid #7a2a2a;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:.9rem}
+  .warn b{color:#ff9b9b}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 22px}
+  .toolbar button{cursor:pointer;background:var(--card);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:8px 14px;font-size:.82rem;font-weight:600;font-family:inherit}
+  .toolbar button:hover{border-color:var(--accent)}
+  footer{color:var(--muted);font-size:.82rem;text-align:center;padding:30px 10px}
+  .top-link{position:fixed;right:18px;bottom:18px;background:var(--accent);color:#fff;width:44px;height:44px;
+    border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 6px 18px rgba(0,0,0,.4);opacity:.9}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">NLP Mid-Sem Revision
+      <small>S2-25 · AIMLCZG530 · Prof. Chetana Gavankar<br>Self-study app · every exam topic + 2 examples each</small>
+    </div>
+    <ul class="navlist" id="nav">
+      <li><a href="#top"><span class="navnum">★</span> Exam blueprint &amp; how to use</a></li>
+      <li><a href="#s1"><span class="navnum">1</span> Introduction to NLP</a></li>
+      <li><a href="#s2"><span class="navnum">2</span> Evaluation Metrics (P/R/F1)</a></li>
+      <li><a href="#s3"><span class="navnum">3</span> Vector Semantics &amp; Cosine</a></li>
+      <li><a href="#s4"><span class="navnum">4</span> TF–IDF</a></li>
+      <li><a href="#s5"><span class="navnum">5</span> Word Embeddings: SGNS</a></li>
+      <li><a href="#s6"><span class="navnum">6</span> CBOW &amp; GloVe</a></li>
+      <li><a href="#s7"><span class="navnum">7</span> N-gram Language Modeling</a></li>
+      <li><a href="#s8"><span class="navnum">8</span> Smoothing, Interpolation, Backoff</a></li>
+      <li><a href="#s9"><span class="navnum">9</span> Perplexity</a></li>
+      <li><a href="#s10"><span class="navnum">10</span> Neural LMs &amp; LLMs</a></li>
+      <li><a href="#s11"><span class="navnum">11</span> POS Tagging: HMM &amp; Viterbi</a></li>
+    </ul>
+  </aside>
+
+  <!-- ============ CONTENT ============ -->
+  <main class="content">
+    <div id="top" class="hero">
+      <h1>🎯 NLP Mid-Sem — Complete Revision &amp; Practice</h1>
+      <p>Built from your final pre-exam recap lecture. It covers <b>every topic the professor flagged for the exam</b>, with the key formulas and <b>two examples per topic</b>: one fully worked step-by-step, and one for you to solve with only the final answer revealed so you can self-check.</p>
+      <div>
+        <span class="pill">30 marks · Closed book</span>
+        <span class="pill">6–7 questions</span>
+        <span class="pill">Numerical + Scenario + Conceptual</span>
+      </div>
+
+      <h3 style="margin-top:18px">Exam blueprint (from the lecture)</h3>
+      <table class="blueprint">
+        <tr><th>#</th><th>Module</th><th>What to expect</th><th>~Marks</th></tr>
+        <tr><td>1</td><td>Introduction to NLP</td><td>Application/scenario question: is it NLP? ambiguities, levels, pipeline, hybrid systems, metrics</td><td>4–5</td></tr>
+        <tr><td>2</td><td>N-gram Language Modeling</td><td>Numerical: bigram/trigram, Laplace smoothing, interpolation/backoff, perplexity</td><td>4–5</td></tr>
+        <tr><td>3</td><td>Neural LM &amp; intro to LLMs</td><td>Application + small problem (feed-forward LM, softmax, prompt-engineering concept)</td><td>4</td></tr>
+        <tr><td>4</td><td>Vector Semantics</td><td>Numerical: TF–IDF and/or cosine similarity, sparse vectors</td><td>4–5</td></tr>
+        <tr><td>5</td><td>Word Embeddings</td><td>Numerical: Skip-Gram Negative Sampling (one iteration); CBOW &amp; GloVe conceptual</td><td>4</td></tr>
+        <tr><td>6</td><td>POS Tagging</td><td>Numerical: HMM + Viterbi (emission/transition matrices); maybe MEMM concept</td><td>5</td></tr>
+      </table>
+      <div class="tip"><b>Exam tips from the professor:</b> always write the formula you use; state every assumption (e.g. stop-words, &lt;s&gt;/&lt;/s&gt; tags); for TF–IDF use <b>log base 10</b>; for n-gram/SGNS you may use natural log — just mention it; 1–2 decimal places is fine; no derivations required for SGNS — just use the formulas.</div>
+    </div>
+
+    <div class="toolbar">
+      <button onclick="toggleAll(true)">▸ Reveal all solutions</button>
+      <button onclick="toggleAll(false)">▾ Hide all solutions</button>
+    </div>
+
+    <!-- ===== 1. INTRO ===== -->
+    <section id="s1">
+      <h2>1 · Introduction to NLP <span class="tag app">Application / Scenario</span></h2>
+      <p>NLP makes computers understand and generate human language. It is a <b>hard problem</b> mainly because language is <b>ambiguous</b>, context-dependent, and full of world knowledge that isn't written down.</p>
+
+      <h3>The 4 main ambiguity types</h3>
+      <ul class="clean">
+        <li><b>Lexical</b> — a word has multiple meanings/POS. <span class="muted">"book" = noun (a book) or verb (to book a ticket); "bank" = river bank / money bank.</span></li>
+        <li><b>Syntactic / structural</b> — sentence has multiple parse trees. <span class="muted">"I saw the man with the telescope" — who has the telescope?</span></li>
+        <li><b>Semantic</b> — multiple meanings even after parsing. <span class="muted">"The chicken is ready to eat" — chicken eats, or chicken is eaten?</span></li>
+        <li><b>Pragmatic / referential</b> — meaning depends on context/intent; pronoun reference (anaphora). <span class="muted">"John told Bill that he passed" — who is <i>he</i>?</span></li>
+      </ul>
+
+      <h3>Levels of language understanding (low → high)</h3>
+      <ul class="clean">
+        <li><b>Phonology</b> – sounds · <b>Morphology</b> – word structure (un-happi-ness) · <b>Lexical</b> – word meaning/POS</li>
+        <li><b>Syntax</b> – grammar/parse structure · <b>Semantics</b> – literal meaning · <b>Pragmatics</b> – meaning in context</li>
+        <li><b>Discourse</b> – meaning across sentences (coreference). <span class="muted">Modern LLMs reach up to the discourse level via attention.</span></li>
+      </ul>
+
+      <h3>NLP pipeline (classical preprocessing)</h3>
+      <p>Sentence segmentation → <b>Tokenization</b> → lowercasing/normalization → <b>stop-word removal</b> → <b>stemming/lemmatization</b> → POS tagging → parsing → feature/vector representation.</p>
+      <div class="why"><b>Classical vs Modern vs Hybrid:</b> classical = rules + statistics (fast, light, explainable); modern = neural/LLMs (powerful reasoning, heavy). <b>Hybrid</b> = classical for light preprocessing + guardrails, LLMs for advanced reasoning — usually the best real-world design.</div>
+
+      <!-- Example 1 solved -->
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Identify ambiguity &amp; design</div>
+        <div class="qbody"><b>Q:</b> "Visiting relatives can be boring." (a) Name the ambiguity type and explain both readings. (b) Is automatic detection an NLP task? Which understanding level resolves it?</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>(a) Type = Syntactic (structural) ambiguity.</b> Two valid parse structures:<br>
+          Reading 1: "[Visiting relatives] can be boring" → the <i>act of visiting</i> relatives is boring.<br>
+          Reading 2: "Visiting relatives [can be boring]" → relatives <i>who are visiting</i> are boring.</div>
+          <div class="step"><b>(b) Yes</b>, it's an NLP task (syntactic parsing / word-sense &amp; structure disambiguation). It is resolved at the <b>syntax level</b> (choosing the correct parse tree), often helped by <b>semantic/pragmatic</b> context.</div>
+          <div class="step"><b>How you'd implement:</b> tokenize → POS tag → generate candidate parses → rank with a probabilistic parser or LLM using context. Hybrid: rules + neural model.</div>
+        </div>
+      </div>
+
+      <!-- Example 2 self-check -->
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> For "The bank approved my loan after I sat by the river bank," (a) identify the ambiguity type for the word <i>bank</i>, (b) name the level that resolves it, and (c) state which preprocessing step would NOT remove the word "the".</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol">
+          <div class="ans">
+            <div class="final">(a) Lexical (word-sense) ambiguity — financial bank vs river bank.</div>
+            (b) Resolved at the <b>semantic / lexical level</b> using surrounding context ("loan" vs "river").<br>
+            (c) "the" is a stop-word; it is removed by <b>stop-word removal</b>, NOT by stemming/lemmatization or tokenization.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 2. METRICS ===== -->
+    <section id="s2">
+      <h2>2 · Evaluation Metrics <span class="tag math">Numerical (easy marks)</span></h2>
+      <p>NLP systems are judged by more than accuracy. From a confusion matrix (TP, FP, FN, TN):</p>
+      <div class="formula-box"><div class="formula">
+        Precision = <span class="frac"><span>TP</span><span>TP + FP</span></span> &nbsp;&nbsp;
+        Recall = <span class="frac"><span>TP</span><span>TP + FN</span></span> &nbsp;&nbsp;
+        Accuracy = <span class="frac"><span>TP + TN</span><span>TP + TN + FP + FN</span></span><br>
+        F1 = <span class="frac"><span>2 · Precision · Recall</span><span>Precision + Recall</span></span> &nbsp;(harmonic mean)
+      </div></div>
+      <ul class="clean">
+        <li><b>Precision</b> = of all predicted positive, how many were right (don't cry wolf).</li>
+        <li><b>Recall</b> = of all actual positives, how many we caught (don't miss any).</li>
+        <li><b>F1</b> balances both — use when classes are imbalanced.</li>
+      </ul>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Spam classifier</div>
+        <div class="qbody"><b>Q:</b> A spam filter gives TP = 40, FP = 10, FN = 5, TN = 45. Compute Precision, Recall, F1, Accuracy.</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>Precision</b> = 40 / (40+10) = 40/50 = <b>0.80</b></div>
+          <div class="step"><b>Recall</b> = 40 / (40+5) = 40/45 = <b>0.889</b></div>
+          <div class="step"><b>F1</b> = 2(0.80)(0.889)/(0.80+0.889) = 1.4222/1.6889 = <b>0.842</b></div>
+          <div class="step"><b>Accuracy</b> = (40+45)/100 = <b>0.85</b></div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> A sentiment model gives TP = 30, FP = 20, FN = 10, TN = 40. Compute Precision, Recall, F1, Accuracy.</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">P = 0.60 · R = 0.75 · F1 = 0.667 · Accuracy = 0.70</div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 3. VECTOR SEMANTICS / COSINE ===== -->
+    <section id="s3">
+      <h2>3 · Vector Semantics &amp; Cosine Similarity <span class="tag math">Numerical</span></h2>
+      <p>Core idea: represent each word/document as a <b>vector</b>. Words used in similar contexts get similar vectors (the <b>distributional hypothesis</b>), so similarity becomes math.</p>
+      <ul class="clean">
+        <li><b>Term–document matrix:</b> columns = documents, cells = counts → a <b>document vector</b> (column) or <b>word vector</b> (row).</li>
+        <li><b>Term–term co-occurrence matrix:</b> how often two words appear within a ±k context window → word vectors.</li>
+        <li>To compare vectors you can't just subtract — use the <b>dot product</b>, normalized by length → <b>cosine similarity</b>.</li>
+      </ul>
+      <div class="formula-box"><div class="formula">
+        <b>a · b</b> = Σ a<sub>i</sub>b<sub>i</sub> &nbsp;&nbsp;&nbsp; |a| = <span class="vsqrt">√(Σ a<sub>i</sub>²)</span><br>
+        cos(a,b) = <span class="frac"><span>a · b</span><span>|a| · |b|</span></span> = <span class="frac"><span>Σ a<sub>i</sub>b<sub>i</sub></span><span><span class="vsqrt">√Σa<sub>i</sub>²</span> · <span class="vsqrt">√Σb<sub>i</sub>²</span></span></span>
+      </div></div>
+      <p class="muted">cos ≈ 1 → very similar (same semantic space); cos ≈ 0 → unrelated. Dividing by length makes it independent of document/vector size.</p>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Cosine similarity</div>
+        <div class="qbody"><b>Q:</b> Find the cosine similarity between word vectors <b>A</b> = [3, 2, 0, 5] and <b>B</b> = [1, 0, 4, 2].</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>Dot product:</b> A·B = (3·1)+(2·0)+(0·4)+(5·2) = 3+0+0+10 = <b>13</b></div>
+          <div class="step"><b>|A|</b> = √(9+4+0+25) = √38 = <b>6.164</b></div>
+          <div class="step"><b>|B|</b> = √(1+0+16+4) = √21 = <b>4.583</b></div>
+          <div class="step"><b>cos(A,B)</b> = 13 / (6.164 × 4.583) = 13 / 28.25 = <b>0.460</b></div>
+          <div class="step">Interpretation: moderate similarity (not strongly related).</div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> Compute cosine similarity between <b>A</b> = [1, 2, 3] and <b>B</b> = [2, 0, 1].</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">cos(A,B) = 5 / (√14 · √5) = 5 / 8.367 = 0.598</div>
+          Steps to match: dot = 2+0+3 = 5, |A| = √14 = 3.742, |B| = √5 = 2.236.
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 4. TF-IDF ===== -->
+    <section id="s4">
+      <h2>4 · TF–IDF <span class="tag math">Numerical</span></h2>
+      <p>Raw counts over-weight common words. <b>TF–IDF</b> boosts words that are frequent in <i>this</i> document but rare across the <i>collection</i>. (Jurafsky &amp; Martin conventions, <b>log base 10</b>.)</p>
+      <div class="formula-box"><div class="formula">
+        tf<sub>t,d</sub> = 1 + log<sub>10</sub>(count<sub>t,d</sub>) &nbsp;(if count &gt; 0, else 0)<br>
+        idf<sub>t</sub> = log<sub>10</sub>( <span class="frac"><span>N</span><span>df<sub>t</sub></span></span> ) &nbsp;&nbsp;&nbsp; <b>tf-idf<sub>t,d</sub> = tf<sub>t,d</sub> × idf<sub>t</sub></b>
+      </div></div>
+      <ul class="clean">
+        <li><b>N</b> = total number of documents; <b>df<sub>t</sub></b> = number of documents containing term <i>t</i>.</li>
+        <li><b>Collection frequency</b> counts every occurrence; <b>document frequency (df)</b> only counts <i>how many documents</i> contain it.</li>
+        <li>A word in <b>all</b> documents → idf = log(N/N) = log 1 = <b>0</b> → killed off (e.g. "the", "good").</li>
+      </ul>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Compute TF–IDF</div>
+        <div class="qbody"><b>Q:</b> Corpus has <b>N = 3</b> documents. In Doc1: "cheese" appears 8 times (df=3), "sauce" 12 times (df=2), "truffle" 4 times (df=1). Compute the TF–IDF weight of each term in Doc1 (log base 10).</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>cheese:</b> tf = 1+log10(8) = 1+0.903 = 1.903; idf = log10(3/3) = log10(1) = 0 → tf-idf = <b>0.000</b></div>
+          <div class="step"><b>sauce:</b> tf = 1+log10(12) = 1+1.079 = 2.079; idf = log10(3/2) = 0.176 → tf-idf = 2.079×0.176 = <b>0.366</b></div>
+          <div class="step"><b>truffle:</b> tf = 1+log10(4) = 1+0.602 = 1.602; idf = log10(3/1) = 0.477 → tf-idf = 1.602×0.477 = <b>0.764</b></div>
+          <div class="step">Note how "cheese" (in every doc) is zeroed out, while the rare "truffle" gets the highest weight — exactly the goal of IDF.</div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> Corpus has <b>N = 4</b> documents. In a document, "the" appears 20 times (df=4), "player" 6 times (df=2), "Messi" 3 times (df=1). Compute each TF–IDF (log base 10).</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">the = 0.000 · player = 0.535 · Messi = 0.889</div>
+          tf: the=2.301, player=1.778, Messi=1.477 · idf: the=0, player=log10(2)=0.301, Messi=log10(4)=0.602.
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 5. SGNS ===== -->
+    <section id="s5">
+      <h2>5 · Word Embeddings — Skip-Gram Negative Sampling <span class="tag math">Numerical (the hard one)</span></h2>
+      <p>Sparse TF–IDF vectors are long and full of zeros. <b>Word2Vec</b> learns short <b>dense</b> vectors. SGNS is <b>self-supervised</b>: it uses the corpus itself to create labels — no human annotation.</p>
+      <ul class="clean">
+        <li>Pick a <b>target</b> word <i>w</i>. Words inside the ±k window = <b>positive</b> context (label 1). Random words outside = <b>negative</b> samples (label 0), usually k per positive.</li>
+        <li>Treat it as <b>binary logistic regression</b>: predict "is this a real context word?" We don't care about the prediction — we want the learned <b>weights = the embeddings</b>.</li>
+        <li>Each word ends up with a <b>target vector</b> and a <b>context vector</b>; the final embedding combines (sums) them.</li>
+      </ul>
+      <div class="formula-box"><div class="formula">
+        P(+|w,c<sub>pos</sub>) = σ(c<sub>pos</sub>·w) = <span class="frac"><span>1</span><span>1 + e<sup>−(c<sub>pos</sub>·w)</sup></span></span> &nbsp;&nbsp;
+        P(−|w,c<sub>neg</sub>) = σ(−c<sub>neg</sub>·w) = <span class="frac"><span>1</span><span>1 + e<sup>+(c<sub>neg</sub>·w)</sup></span></span><br>
+        <b>Gradient updates</b> (learning rate η):<br>
+        c<sub>pos</sub> ← c<sub>pos</sub> − η[σ(c<sub>pos</sub>·w) − 1]·w<br>
+        c<sub>neg</sub> ← c<sub>neg</sub> − η[σ(c<sub>neg</sub>·w) − 0]·w<br>
+        w ← w − η{ [σ(c<sub>pos</sub>·w)−1]c<sub>pos</sub> + Σ[σ(c<sub>neg</sub>·w)]c<sub>neg</sub> }
+      </div></div>
+      <div class="tip"><b>σ is the sigmoid.</b> "Predicted − actual": for the positive word actual = 1, for negatives actual = 0. No derivation needed in the exam — just plug into these three update lines.</div>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — One SGNS iteration</div>
+        <div class="qbody"><b>Q:</b> Target <b>w</b> = [0.2, 0.3], positive context <b>c<sub>+</sub></b> = [0.4, 0.1], two negatives <b>c<sub>n1</sub></b> = [−0.2, 0.3], <b>c<sub>n2</sub></b> = [0.1, −0.4], η = 0.1. Do one update.</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>Step 1 – dot products.</b> w·c<sub>+</sub> = 0.08+0.03 = 0.11; w·c<sub>n1</sub> = −0.04+0.09 = 0.05; w·c<sub>n2</sub> = 0.02−0.12 = −0.10</div>
+          <div class="step"><b>Step 2 – sigmoids.</b> σ(0.11)=0.5275; σ(0.05)=0.5125; σ(−0.10)=0.4750</div>
+          <div class="step"><b>Step 3 – errors.</b> positive: σ−1 = 0.5275−1 = −0.4725; negatives use σ−0 = 0.5125 and 0.4750</div>
+          <div class="step"><b>Step 4 – update c<sub>+</sub>:</b> c<sub>+</sub> − 0.1(−0.4725)[0.2,0.3] = [0.4,0.1] + [0.00945,0.0142] = <b>[0.4095, 0.1142]</b></div>
+          <div class="step"><b>Update c<sub>n1</sub>:</b> [−0.2,0.3] − 0.1(0.5125)[0.2,0.3] = <b>[−0.2102, 0.2846]</b></div>
+          <div class="step"><b>Update c<sub>n2</sub>:</b> [0.1,−0.4] − 0.1(0.4750)[0.2,0.3] = <b>[0.0905, −0.4143]</b></div>
+          <div class="step"><b>Update w:</b> gradient = (−0.4725)[0.4,0.1] + 0.5125[−0.2,0.3] + 0.4750[0.1,−0.4] = [−0.1890,−0.0473]+[−0.1025,0.1538]+[0.0475,−0.1900] = [−0.2440,−0.0835].<br>
+          w ← [0.2,0.3] − 0.1(−0.2440,−0.0835) = <b>[0.2244, 0.3084]</b></div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> Target <b>w</b> = [0.1, 0.1], positive <b>c<sub>+</sub></b> = [0.5, 0.2], one negative <b>c<sub>n</sub></b> = [−0.1, 0.4], η = 0.1. Do one update of c<sub>+</sub>, c<sub>n</sub> and w.</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">c<sub>+</sub> = [0.5048, 0.2048] · c<sub>n</sub> = [−0.1051, 0.3949] · w = [0.1292, 0.0894]</div>
+          Checks: w·c<sub>+</sub>=0.07 → σ=0.5175; w·c<sub>n</sub>=0.03 → σ=0.5075. Positive error = −0.4825, negative error = 0.5075.
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 6. CBOW & GLOVE ===== -->
+    <section id="s6">
+      <h2>6 · CBOW &amp; GloVe <span class="tag app">Conceptual (minor)</span></h2>
+      <p>Both are alternative ways to learn dense word vectors. The professor said: <b>no full numerical on CBOW</b>; GloVe is conceptual with possibly a minor question.</p>
+      <ul class="clean">
+        <li><b>CBOW (Continuous Bag of Words):</b> the mirror image of skip-gram — uses the <b>surrounding context words to predict the target/center word</b>. Skip-gram does the opposite (center → context). CBOW is faster and good for frequent words; skip-gram is better for rare words and small data.</li>
+        <li><b>GloVe (Global Vectors):</b> a <b>count-based + prediction hybrid</b>. It factorizes the global <b>co-occurrence</b> matrix so the dot product of two word vectors ≈ log of their co-occurrence count. It captures global statistics (whole corpus at once), unlike Word2Vec which slides locally window-by-window.</li>
+        <li><b>One-hot encoding:</b> vector of size = vocabulary, a single 1 at the word's index. Carries no similarity info; used only as the input that gets multiplied by the embedding matrix to "look up" the dense vector.</li>
+      </ul>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — CBOW vs Skip-gram</div>
+        <div class="qbody"><b>Q:</b> For the sentence "the cat sat on the mat" with center word "sat" and window ±2, state the (input → output) training pair for (a) CBOW and (b) Skip-gram.</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step">Context window of "sat" (±2) = {the, cat, on, the}.</div>
+          <div class="step"><b>(a) CBOW:</b> input = context {the, cat, on, the} → output = <b>"sat"</b> (predict center from context).</div>
+          <div class="step"><b>(b) Skip-gram:</b> input = "sat" → outputs = each context word: (sat→the), (sat→cat), (sat→on), (sat→the).</div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> (a) Which model (CBOW / skip-gram) would you prefer for a small corpus with many rare technical terms? (b) What does GloVe's objective make the dot product of two word vectors approximate?</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">(a) Skip-gram (better for rare words / small data). (b) The log of the words' co-occurrence count.</div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 7. N-GRAM ===== -->
+    <section id="s7">
+      <h2>7 · N-gram Language Modeling <span class="tag math">Numerical</span></h2>
+      <p>A language model assigns a probability to a word sequence / predicts the next word. By the <b>chain rule</b>: P(w₁…wₙ) = ∏ P(wᵢ | w₁…wᵢ₋₁). That needs impossibly long histories, so we make the <b>Markov assumption</b>: a word depends only on the previous 1 (bigram) or 2 (trigram) words.</p>
+      <div class="formula-box"><div class="formula">
+        <b>Bigram:</b> P(wₙ | wₙ₋₁) = <span class="frac"><span>count(wₙ₋₁, wₙ)</span><span>count(wₙ₋₁)</span></span> &nbsp;&nbsp;&nbsp;
+        <b>Trigram:</b> P(wₙ | wₙ₋₂, wₙ₋₁) = <span class="frac"><span>count(wₙ₋₂, wₙ₋₁, wₙ)</span><span>count(wₙ₋₂, wₙ₋₁)</span></span><br>
+        <b>Sentence:</b> P(s) = ∏ P(wᵢ | wᵢ₋₁) &nbsp; (use log-sum for long sentences to avoid underflow)
+      </div></div>
+      <div class="tip"><b>Convention:</b> add sentence boundaries <code>&lt;s&gt;</code> and <code>&lt;/s&gt;</code> if the question says so. In the count table the <b>row = first/previous word, column = next word</b>.</div>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Bigram probabilities &amp; sentence probability</div>
+        <div class="qbody"><b>Q:</b> Training corpus (with boundaries):<br>
+          <code>&lt;s&gt; I am Sam &lt;/s&gt;</code><br><code>&lt;s&gt; Sam I am &lt;/s&gt;</code><br><code>&lt;s&gt; I like Sam &lt;/s&gt;</code><br>
+          Find P(I|&lt;s&gt;), P(am|I), P(Sam|am), P(&lt;/s&gt;|Sam), then P(<code>&lt;s&gt; I am Sam &lt;/s&gt;</code>).</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>Unigram counts:</b> &lt;s&gt;=3, I=3, am=2, Sam=3, like=1, &lt;/s&gt;=3.</div>
+          <div class="step"><b>P(I|&lt;s&gt;)</b> = count(&lt;s&gt; I)/count(&lt;s&gt;) = 2/3 = <b>0.667</b></div>
+          <div class="step"><b>P(am|I)</b> = count(I am)/count(I) = 2/3 = <b>0.667</b></div>
+          <div class="step"><b>P(Sam|am)</b> = count(am Sam)/count(am) = 1/2 = <b>0.500</b></div>
+          <div class="step"><b>P(&lt;/s&gt;|Sam)</b> = count(Sam &lt;/s&gt;)/count(Sam) = 2/3 = <b>0.667</b></div>
+          <div class="step"><b>Sentence:</b> P = P(I|&lt;s&gt;)·P(am|I)·P(Sam|am)·P(&lt;/s&gt;|Sam) = 0.667×0.667×0.5×0.667 = <b>0.1481</b></div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> Corpus:<br><code>&lt;s&gt; the cat runs &lt;/s&gt;</code><br><code>&lt;s&gt; the dog runs &lt;/s&gt;</code><br><code>&lt;s&gt; the cat sleeps &lt;/s&gt;</code><br>
+        Compute P(<code>&lt;s&gt; the cat runs &lt;/s&gt;</code>) using bigrams.</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">P = 1.000 × 0.667 × 0.500 × 1.000 = 0.333</div>
+          P(the|&lt;s&gt;)=3/3=1, P(cat|the)=2/3, P(runs|cat)=1/2, P(&lt;/s&gt;|runs)=2/2=1.
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 8. SMOOTHING ===== -->
+    <section id="s8">
+      <h2>8 · Smoothing, Interpolation &amp; Backoff <span class="tag math">Numerical / Conceptual</span></h2>
+      <p>Problem: an unseen bigram gets probability 0, which zeroes the whole sentence. Fixes:</p>
+      <div class="formula-box"><div class="formula">
+        <b>Laplace (Add-1):</b> P*(wₙ | wₙ₋₁) = <span class="frac"><span>count(wₙ₋₁, wₙ) + 1</span><span>count(wₙ₋₁) + V</span></span> &nbsp;(V = vocabulary size)<br>
+        <b>Interpolation:</b> P̂ = λ₁P(wₙ|wₙ₋₂,wₙ₋₁) + λ₂P(wₙ|wₙ₋₁) + λ₃P(wₙ), &nbsp; Σλ = 1<br>
+        <b>Backoff:</b> use trigram; if unseen → back off to bigram; if unseen → unigram.
+      </div></div>
+      <ul class="clean">
+        <li><b>Laplace</b> is simple but <b>manipulates the counts</b> a lot (steals too much mass) — used mainly for classification, not big LMs.</li>
+        <li><b>Interpolation</b> always mixes all orders (higher weight λ to trigram). <b>Backoff</b> only drops to a lower order when the higher one is missing. These are preferred in practice.</li>
+      </ul>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Add-1 smoothing</div>
+        <div class="qbody"><b>Q:</b> Using the same corpus as §7 (I am Sam …), vocabulary V = 6 (&lt;s&gt;, &lt;/s&gt;, I, am, Sam, like). Compute the <b>smoothed</b> P*(am|I) and P*(Sam|I). Recall count(I)=3, count(I am)=2, count(I Sam)=0.</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>P*(am|I)</b> = (count(I am)+1)/(count(I)+V) = (2+1)/(3+6) = 3/9 = <b>0.333</b></div>
+          <div class="step"><b>P*(Sam|I)</b> = (0+1)/(3+6) = 1/9 = <b>0.111</b></div>
+          <div class="step">Note the unseen "I Sam" now gets a non-zero 0.111 instead of 0 — that's the whole point.</div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> With V = 6, count(am) = 2, count(am Sam) = 1, count(am I) = 0: compute add-1 smoothed P*(Sam|am) and P*(I|am).</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">P*(Sam|am) = (1+1)/(2+6) = 0.250 · P*(I|am) = (0+1)/(2+6) = 0.125</div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 9. PERPLEXITY ===== -->
+    <section id="s9">
+      <h2>9 · Perplexity <span class="tag math">Numerical</span></h2>
+      <p><b>Perplexity</b> is the standard <b>intrinsic</b> evaluation of a language model — the inverse probability of the test set, normalized by the number of words. <b>Lower perplexity = better model.</b> Intuitively it's the model's average "branching factor" (how confused it is about the next word).</p>
+      <div class="formula-box"><div class="formula">
+        PP(W) = P(w₁w₂…w_N)<sup>−1/N</sup> = <span style="font-size:1.3em">ᴺ</span><span class="vsqrt">√ ( <span class="frac"><span>1</span><span>P(w₁…w_N)</span></span> )</span>
+        &nbsp;&nbsp;=&nbsp;&nbsp; <span style="font-size:1.3em">ᴺ</span><span class="vsqrt">√ ∏ <span class="frac"><span>1</span><span>P(wᵢ | history)</span></span></span>
+      </div></div>
+      <p class="muted">N = number of words in the sequence. Use the same per-word probabilities your LM (bigram/trigram/neural) produced.</p>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Compute perplexity</div>
+        <div class="qbody"><b>Q:</b> A model assigns these per-word probabilities to a 4-word sentence: 0.25, 0.5, 0.1, 0.2. Find the perplexity.</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>Step 1 – sequence probability:</b> P = 0.25 × 0.5 × 0.1 × 0.2 = <b>0.0025</b></div>
+          <div class="step"><b>Step 2 – invert &amp; take Nth root:</b> N = 4, PP = (0.0025)<sup>−1/4</sup> = (1/0.0025)<sup>1/4</sup> = (400)<sup>0.25</sup></div>
+          <div class="step"><b>Step 3:</b> 400<sup>0.25</sup> = <b>4.47</b></div>
+          <div class="step">Interpretation: the model is, on average, as uncertain as if choosing uniformly among ~4.5 words.</div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> A model gives per-word probabilities 0.2, 0.4, 0.5 to a 3-word sentence. Find the perplexity.</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">PP = (0.04)<sup>−1/3</sup> = (25)<sup>1/3</sup> = 2.924</div>
+          Product = 0.2×0.4×0.5 = 0.04; invert → 25; cube root → 2.924.
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 10. NEURAL LM ===== -->
+    <section id="s10">
+      <h2>10 · Neural Language Models &amp; LLMs <span class="tag app">Application + small problem</span></h2>
+      <p>A neural LM applies a <b>feed-forward neural network</b> to predict the next word. Input = <b>word embeddings</b> of the previous words (not raw tokens), passed through hidden layer(s); the output layer uses <b>softmax</b> because predicting the next word is a <b>multi-class</b> problem over the whole vocabulary.</p>
+      <div class="formula-box"><div class="formula">
+        <b>Forward pass:</b> h = activation(W·x + b); &nbsp; output = softmax(U·h)<br>
+        <b>Softmax:</b> P(yᵢ) = <span class="frac"><span>e<sup>zᵢ</sup></span><span>Σⱼ e<sup>zⱼ</sup></span></span> &nbsp;&nbsp;(turns scores into a probability distribution that sums to 1)
+      </div></div>
+      <ul class="clean">
+        <li><b>Sigmoid</b> at output → binary task (e.g. sentiment +/−). <b>Softmax</b> → multi-class (language modeling).</li>
+        <li><b>Sentence embedding</b> = combine word vectors by element-wise <b>mean</b> or <b>max</b>.</li>
+        <li><b>Pros vs n-gram:</b> handles unseen words via embeddings, captures similarity, generalizes better. <b>Cons:</b> needs more data/compute, less interpretable.</li>
+        <li><b>LLMs</b> = neural LMs with huge parameters + training data (transformers). <b>Pre-train</b> then <b>fine-tune</b> for a task/domain. <b>Prompting:</b> zero-shot (no examples), few-shot (a few examples). <b>Generative AI</b> = generate new text/image/video/code from a prompt.</li>
+      </ul>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Softmax over next-word scores</div>
+        <div class="qbody"><b>Q:</b> A neural LM's output layer produces scores (logits) z = [2.0, 1.0, 0.1] for the three candidate next words [dog, cat, runs]. Apply softmax to get probabilities.</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>Exponentiate:</b> e²·⁰=7.389, e¹·⁰=2.718, e⁰·¹=1.105</div>
+          <div class="step"><b>Sum:</b> 7.389 + 2.718 + 1.105 = 11.213</div>
+          <div class="step"><b>Divide:</b> dog = 7.389/11.213 = <b>0.659</b>, cat = 2.718/11.213 = <b>0.242</b>, runs = 1.105/11.213 = <b>0.099</b></div>
+          <div class="step">Predicted next word = <b>"dog"</b> (highest probability). Probabilities sum to 1.0. ✓</div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> (a) Apply softmax to logits z = [1.0, 3.0, 0.5]. (b) Which output activation does a neural <i>language model</i> use, and why?</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">(a) softmax = [0.111, 0.821, 0.067] — 2nd word wins. (b) Softmax, because next-word prediction is multi-class over the whole vocabulary.</div>
+          e¹=2.718, e³=20.086, e⁰·⁵=1.649; sum=24.453.
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 11. POS TAGGING ===== -->
+    <section id="s11">
+      <h2>11 · POS Tagging — HMM &amp; Viterbi <span class="tag math">Numerical (~5 marks)</span></h2>
+      <div class="warn"><b>Note:</b> the professor skipped re-explaining POS tagging in this recap only because it was covered the same afternoon — but it <b>is</b> on the exam with a numerical (HMM + Viterbi), so it's fully included here.</div>
+      <p>An <b>HMM</b> models tagging with two probability tables:</p>
+      <ul class="clean">
+        <li><b>Transition</b> P(tagᵢ | tagᵢ₋₁) — how likely one tag follows another (rows = previous tag).</li>
+        <li><b>Emission</b> P(word | tag) — how likely a tag produces a word.</li>
+      </ul>
+      <p>The <b>Viterbi algorithm</b> uses dynamic programming to find the single most likely tag sequence.</p>
+      <div class="formula-box"><div class="formula">
+        v₁(t) = P(t | &lt;s&gt;) · P(word₁ | t)<br>
+        vᵢ(t) = <span style="font-style:italic">max</span><sub>t'</sub> [ vᵢ₋₁(t') · P(t | t') ] · P(wordᵢ | t) &nbsp;&nbsp; (keep a backpointer to the best t')
+      </div></div>
+      <p class="muted">MEMM (Maximum-Entropy Markov Model) is a discriminative alternative that conditions on features of the words directly — a small concept question is possible.</p>
+
+      <div class="ex solved">
+        <div class="ex-head"><span class="badge">WORKED</span> Example 1 — Viterbi for "fish sleep"</div>
+        <div class="qbody"><b>Q:</b> Tags = {N, V}. Initial P(N|&lt;s&gt;)=0.8, P(V|&lt;s&gt;)=0.2.<br>
+        Transition: P(N|N)=0.4, P(V|N)=0.6, P(N|V)=0.7, P(V|V)=0.3.<br>
+        Emission: P(fish|N)=0.5, P(fish|V)=0.2, P(sleep|N)=0.1, P(sleep|V)=0.4.<br>
+        Find the most likely tag sequence for "fish sleep".</div>
+        <button class="btn s" onclick="tog(this)">Show worked solution</button>
+        <div class="sol">
+          <div class="step"><b>Step 1 — word "fish":</b><br>
+            v₁(N) = P(N|&lt;s&gt;)·P(fish|N) = 0.8×0.5 = <b>0.40</b><br>
+            v₁(V) = P(V|&lt;s&gt;)·P(fish|V) = 0.2×0.2 = <b>0.04</b></div>
+          <div class="step"><b>Step 2 — word "sleep":</b><br>
+            v₂(N) = max[ v₁(N)·P(N|N), v₁(V)·P(N|V) ] · P(sleep|N) = max[0.40×0.4, 0.04×0.7]×0.1 = max[0.16, 0.028]×0.1 = 0.16×0.1 = <b>0.016</b> &nbsp;(from N)<br>
+            v₂(V) = max[ v₁(N)·P(V|N), v₁(V)·P(V|V) ] · P(sleep|V) = max[0.40×0.6, 0.04×0.3]×0.4 = max[0.24, 0.012]×0.4 = 0.24×0.4 = <b>0.096</b> &nbsp;(from N)</div>
+          <div class="step"><b>Step 3 — best final:</b> max(v₂(N)=0.016, v₂(V)=0.096) = <b>0.096 → V</b>. Backpointer of V points to N.</div>
+          <div class="step"><b>Best tag sequence: fish/N &nbsp; sleep/V</b> (probability 0.096).</div>
+        </div>
+      </div>
+
+      <div class="ex check">
+        <div class="ex-head"><span class="badge">SELF-CHECK</span> Example 2 — Try it yourself</div>
+        <div class="qbody"><b>Q:</b> Tags = {D, N}. Initial P(D|&lt;s&gt;)=0.6, P(N|&lt;s&gt;)=0.4.<br>
+        Transition: P(D|D)=0.1, P(N|D)=0.9, P(D|N)=0.5, P(N|N)=0.5.<br>
+        Emission: P(the|D)=0.7, P(the|N)=0.1, P(dog|D)=0.05, P(dog|N)=0.6.<br>
+        Find the best tag sequence for "the dog".</div>
+        <button class="btn c" onclick="tog(this)">Show final answer</button>
+        <div class="sol"><div class="ans">
+          <div class="final">Best sequence: the/D &nbsp; dog/N &nbsp; (probability 0.2268)</div>
+          v₁(D)=0.6×0.7=0.42, v₁(N)=0.4×0.1=0.04. v₂(N)=max[0.42×0.9, 0.04×0.5]×0.6 = 0.378×0.6 = 0.2268 (from D); v₂(D)=max[0.42×0.1,0.04×0.5]×0.05 = 0.0021. Winner = N, backpointer → D.
+        </div></div>
+      </div>
+    </section>
+
+    <footer>
+      Made for your NLP S2-25 mid-sem. All numerical answers were computed and verified. Write formulas + assumptions clearly, and good luck! 🍀
+    </footer>
+  </main>
+</div>
+<a href="#top" class="top-link" title="Back to top">↑</a>
+
+<script>
+  // Toggle a single solution
+  function tog(btn){
+    var sol = btn.nextElementSibling;
+    var open = sol.classList.toggle('open');
+    if(btn.classList.contains('s')) btn.textContent = open ? 'Hide worked solution' : 'Show worked solution';
+    else btn.textContent = open ? 'Hide final answer' : 'Show final answer';
+  }
+  // Reveal / hide all
+  function toggleAll(show){
+    document.querySelectorAll('.sol').forEach(function(s){
+      s.classList.toggle('open', show);
+    });
+    document.querySelectorAll('.btn').forEach(function(b){
+      if(b.classList.contains('s')) b.textContent = show ? 'Hide worked solution' : 'Show worked solution';
+      if(b.classList.contains('c')) b.textContent = show ? 'Hide final answer' : 'Show final answer';
+    });
+  }
+  // Active nav highlight on scroll
+  var links = Array.prototype.slice.call(document.querySelectorAll('#nav a'));
+  var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function onScroll(){
+    var pos = window.scrollY + 120;
+    var idx = 0;
+    for(var i=0;i<sections.length;i++){
+      if(sections[i] && sections[i].offsetTop <= pos) idx = i;
+    }
+    links.forEach(function(l){ l.classList.remove('active'); });
+    if(links[idx]) links[idx].classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll);
+  window.addEventListener('load', onScroll);
+</script>
+</body>
+</html>
